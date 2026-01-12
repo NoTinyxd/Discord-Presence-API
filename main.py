@@ -10,4 +10,3 @@ if __name__=='__main__':
  api_thread.start()
  bot_thread.join()
  api_thread.join()
-#it took me 1 hour and 30 minutes something xd

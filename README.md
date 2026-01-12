@@ -78,8 +78,7 @@ Discord-Presence-API/
 ├── config.json      - Bot configuration
 ├── examples/
 │   ├── example.html - Web interface
-│   ├── example.css  - Interface styling
-│   └── example.js   - Frontend logic
+|   ├── example.css  - Interface styling
 └── README.md
 ```
 

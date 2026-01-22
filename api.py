@@ -2,7 +2,7 @@ from flask import Flask,jsonify
 from flask_cors import CORS
 import discord
 import bot
-
+#..
 app=Flask(__name__)
 CORS(app)
 discord_bot=None
@@ -77,4 +77,5 @@ def user(user_id):
   return jsonify({'success':False,'error':str(e)}),500
 
 def run():
+
  app.run(host='0.0.0.0',port=5000)

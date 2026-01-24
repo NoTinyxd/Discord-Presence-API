@@ -1,0 +1,154 @@
+<!--This is a representative example of how you might implement embedded Discord presence into your website. Make sure to star the repo.
+!!-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Discord Presence</title>
+<link rel="stylesheet" href="example.css">
+</head>
+<body>
+<div class="card" id="presence">
+<div class="loading">Loading presence...</div>
+</div>
+<script>
+const u='http://localhost:5000/v1/users/1069163000910585966'//reokace this 1069163000910585966 user id with your own user id
+async function load(){
+try{
+const r=await fetch(u)
+const d=await r.json()
+if(!d.success){
+document.getElementById('presence').innerHTML=`<div class="error">Error: ${d.error}</div>`
+return
+}
+const user=d.data.discord_user
+const acts=d.data.activities
+const status=d.data.discord_status
+const spotify=d.data.spotify
+const recents=d.data.spotify_recent||[]
+const lastseen=d.data.last_seen
+const webActive=d.data.active_on_discord_web
+const desktopActive=d.data.active_on_discord_desktop
+const mobileActive=d.data.active_on_discord_mobile
+const listeningSpotify=d.data.listening_to_spotify
+let avatar=user.avatar?`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${user.avatar.startsWith('a_')?'gif':'png'}?size=128`:`https://cdn.discordapp.com/embed/avatars/${parseInt(user.id)%5}.png`
+let decoration=''
+if(user.avatar_decoration_data){
+decoration=`<img src="https://cdn.discordapp.com/avatar-decoration-presets/${user.avatar_decoration_data.asset}.png?size=128" class="avatar-decoration">`
+}
+let bannerStyle=''
+if(user.banner){
+bannerStyle=`background-image:url('https://cdn.discordapp.com/banners/${user.id}/${user.banner}.${user.banner.startsWith('a_')?'gif':'png'}?size=600');background-size:cover;background-position:center`
+}else if(user.accent_color){
+bannerStyle=`background:${user.accent_color}`
+}else{
+bannerStyle=`background:linear-gradient(135deg,#5865f2,#7289da)`
+}
+let customStatus=acts.find(a=>a.type===4)
+let customStatusText=customStatus?.state||''
+let badges=''
+let badgeList=[]
+if(user.public_flags){
+let flags=user.public_flags
+//badges below
+if(flags&1)badgeList.push({name:'Staff',icon:'https://cdn.discordapp.com/badge-icons/5e74e9b61934fc1f67c65515d1f7e60d.png'})
+if(flags&2)badgeList.push({name:'Partner',icon:'https://cdn.discordapp.com/badge-icons/3f9748e53446a137a052f3454e2de41e.png'})
+if(flags&4)badgeList.push({name:'HypeSquad Events',icon:'https://cdn.discordapp.com/badge-icons/bf01d1073931f921909045f3a39fd264.png'})
+if(flags&8)badgeList.push({name:'Bug Hunter Level 1',icon:'https://cdn.discordapp.com/badge-icons/2717692c7dca7289b35297368a940dd0.png'})
+if(flags&64)badgeList.push({name:'HypeSquad Bravery',icon:'https://cdn.discordapp.com/badge-icons/8a88d63823d8a71cd5e390baa45efa02.png'})
+if(flags&128)badgeList.push({name:'HypeSquad Brilliance',icon:'https://cdn.discordapp.com/badge-icons/011940fd013da3f7fb926e4a1cd2e618.png'})
+if(flags&256)badgeList.push({name:'HypeSquad Balance',icon:'https://cdn.discordapp.com/badge-icons/3aa41de486fa12454c3761e8e223442e.png'})
+if(flags&512)badgeList.push({name:'Early Supporter',icon:'https://cdn.discordapp.com/badge-icons/7060786766c9c840eb3019e725d2b358.png'})
+if(flags&1024)badgeList.push({name:'Team User',icon:'https://cdn.discordapp.com/badge-icons/6adcfdfd13c83052e8c06b9d3f3f6b8d.png'})
+if(flags&16384)badgeList.push({name:'Bug Hunter Level 2',icon:'https://cdn.discordapp.com/badge-icons/848f79194d4be5ff5f81505cbd0ce1e6.png'})
+if(flags&131072)badgeList.push({name:'Early Verified Bot Developer',icon:'https://cdn.discordapp.com/badge-icons/6df5892e0f35b051f8b61eace34f4967.png'})
+if(flags&262144)badgeList.push({name:'Moderator Programs Alumni',icon:'https://cdn.discordapp.com/badge-icons/fee1624003e2fee35cb398e125dc479b.png'})
+if(flags&4194304)badgeList.push({name:'Active Developer',icon:'https://cdn.discordapp.com/badge-icons/6bdc42827a38498929a4920da12695d9.png'})
+}
+if(user.discriminator==='0')badgeList.push({name:'Originally known as '+user.username,icon:'https://cdn.discordapp.com/badge-icons/6de6d34650760ba5551a79732e98ed60.png'})
+if(badgeList.length>0){
+badges=`<div class="badges">${badgeList.map(b=>`<img src="${b.icon}" alt="${b.name}" title="${b.name}" class="badge">`).join('')}</div>`
+}
+let platforms=''
+if(desktopActive||webActive||mobileActive){
+let platformList=[]
+if(desktopActive)platformList.push('Desktop')
+if(webActive)platformList.push('Web')
+if(mobileActive)platformList.push('Mobile')
+platforms=`<div class="platforms">${platformList.map(p=>`<span class="platform">${p}</span>`).join('')}</div>`
+}
+let lastSeenText=''
+if(status==='offline'&&lastseen){
+lastSeenText=`<div class="activity-text">Last seen ${lastseen} ago</div>`
+}
+let html=`<div class="profile-header"><div class="banner" style="${bannerStyle}"></div><div class="avatar-container"><img src="${avatar}" alt="Avatar" class="avatar">${decoration}<div class="status-indicator ${status}"></div></div><div class="user-info"><div class="username">${user.display_name||user.username}</div><div class="user-tag">@${user.username}</div>${badges}${customStatusText?`<div class="custom-status">${customStatusText}</div>`:''}${lastSeenText}${platforms}</div></div>`
+let richActivities=acts.filter(a=>a.type!==4)
+if(richActivities.length>0||recents.length>0){
+html+=`<div class="activities-section">`
+for(let a of richActivities){
+if(a.type===2&&spotify){
+let elapsed=Date.now()-spotify.timestamps.start
+let total=spotify.timestamps.end-spotify.timestamps.start
+let progress=(elapsed/total)*100
+let currentTime=Math.floor(elapsed/1000)
+let totalTime=Math.floor(total/1000)
+let formatTime=(sec)=>{
+let m=Math.floor(sec/60)
+let s=sec%60
+return `${m}:${s.toString().padStart(2,'0')}`
+}
+html+=`<div class="activity-card spotify"><div class="activity-header">Currently Listening to Spotify</div><div class="activity-content"><img src="${spotify.album_art_url}" class="activity-image"><div class="activity-details"><div class="activity-name">${spotify.song}</div><div class="activity-text">by ${spotify.artist}</div><div class="activity-text">on ${spotify.album}</div></div></div><div class="progress-container"><span class="time-text">${formatTime(currentTime)}</span><div class="progress-bar"><div class="progress-fill" style="width:${Math.min(progress,100)}%"></div></div><span class="time-text">${formatTime(totalTime)}</span></div></div>`
+}else if(a.type===0){
+let largeImage=a.assets?.large_image||''
+if(largeImage.startsWith('mp:')){
+largeImage=largeImage.replace('mp:','https://media.discordapp.net/')
+}
+let smallImage=a.assets?.small_image||''
+if(smallImage.startsWith('mp:')){
+smallImage=smallImage.replace('mp:','https://media.discordapp.net/')
+}
+let timeStr=''
+if(a.timestamps?.start){
+let elapsed=Date.now()-a.timestamps.start
+let hours=Math.floor(elapsed/3600000)
+let mins=Math.floor((elapsed%3600000)/60000)
+let secs=Math.floor((elapsed%60000)/1000)
+timeStr=`${hours>0?hours.toString().padStart(2,'0')+':':''}${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')} elapsed`
+}
+html+=`<div class="activity-card"><div class="activity-header">Playing ${a.name}</div><div class="activity-content">`
+if(largeImage){
+html+=`<div class="activity-image-wrapper">`
+html+=`<img src="${largeImage}" class="activity-image">`
+if(smallImage){
+html+=`<img src="${smallImage}" class="activity-small-image" title="${a.assets?.small_text||''}">`
+}
+html+=`</div>`
+}
+html+=`<div class="activity-details">`
+if(a.details)html+=`<div class="activity-name">${a.details}</div>`
+if(a.state)html+=`<div class="activity-text">${a.state}</div>`
+if(timeStr)html+=`<div class="activity-text">${timeStr}</div>`
+html+=`</div></div></div>`
+}
+}
+if(recents.length>0){
+html+=`<div class="activity-card"><div class="activity-header">Recent Spotify Tracks</div>`
+for(let track of recents){
+html+=`<div class="activity-content" style="margin-top:8px"><img src="${track.album_art_url}" class="activity-image"><div class="activity-details"><div class="activity-name">${track.song}</div><div class="activity-text">by ${track.artist}</div><div class="activity-text">${track.played_ago} ago</div></div></div>`
+}
+html+=`</div>`
+}
+html+=`</div>`
+}
+document.getElementById('presence').innerHTML=html
+}catch(e){
+document.getElementById('presence').innerHTML=`<div class="error">Failed to load presence</div>`
+console.error(e)
+}
+}
+load()
+setInterval(load,7000)
+</script>
+</body>
+</html>

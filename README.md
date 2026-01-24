@@ -13,7 +13,6 @@ A lightweight Discord bot and REST API that exposes real-time Discord user prese
 * Avatar decorations
 * Profile banners & accent colors
 * Public user flags (`public_flags`)
-* Server boost timestamp (`premium_since`)
 * Platform detection:
    * Desktop
    * Web
